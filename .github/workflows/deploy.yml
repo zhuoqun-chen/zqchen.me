@@ -1,6 +1,4 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
+name: Hexo Deploy CI
 
 # Controls when the action will run. 
 on:
@@ -13,26 +11,60 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+jobs:
+
+  deploy:
+    name: Build on node ${{ matrix.node_version }} and ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node_version: [12.x]
+    
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
           submodules: true
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Installation Environment
+        uses: actions/setup-node@master
+        with:
+          node-version: 12.x  
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: replace cdn url
+        id: replace
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          tagname=$(openssl rand -hex 4)
+          sed -i "s/zqchen.me/zqchen.me@$tagname/g" _config.yml
+          sed -i "s/zqchen.me/zqchen.me@$tagname/g" themes/zhuooqun-theme/_config.yml
+          echo "::set-output name=tagname::$tagname"
+
+      - name: Installation
+        run: |
+          npm install
+          npm install -g hexo-cli
+          
+      - name: Generate
+        run: hexo clean && hexo g
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          publish_dir: ./public
+          cname: zqchen.me
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{ steps.replace.outputs.tagname }}
+          release_name: ${{ steps.replace.outputs.tagname }}
+          commitish: gh-pages
+          body: Automatic generated
+          draft: false
+          prerelease: true
