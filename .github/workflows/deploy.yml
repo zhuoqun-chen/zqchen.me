@@ -39,7 +39,7 @@ jobs:
         run: |
           tagname=$(openssl rand -hex 4)
           sed -i "s/zqchen.me/zqchen.me@$tagname/g" _config.yml
-          sed -i "s/zqchen.me/zqchen.me@$tagname/g" themes/zhuooqun-theme/_config.yml
+          sed -i "s/zqchen.me/zqchen.me@$tagname/g" themes/zhuoqun-theme/_config.yml
           echo "::set-output name=tagname::$tagname"
 
       - name: Installation
