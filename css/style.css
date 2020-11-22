@@ -35,7 +35,7 @@ body::before {
   opacity: 0.03;
   position: fixed;
   background: center/cover no-repeat;
-  background-image: url("/img/bg_pic.jpg");
+  background-image: url("https://cdn.jsdelivr.net/gh/zhuoqun-chen/blog-img/bg/bg_pic.jpg");
   z-index: -1;
   pointer-events: none;
 }
